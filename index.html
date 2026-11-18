@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Visualization 1 · Mastering Matplotlib</title>
+<style>
+  /* ━━ TERRACOTTA / WARM LIGHT THEME ━━ */
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:       #f5f0eb;
+    --surface:  #ffffff;
+    --surface2: #fdf6f0;
+    --surface3: #faeee4;
+    --border:   #e8d5c4;
+    --border2:  #d4b89e;
+    --text:     #1f1008;
+    --muted:    #7a5a46;
+    --rust:     #9b3d14;
+    --rust2:    #c4511c;
+    --rust-lt:  #f0e4da;
+    --amber:    #c4511c;
+    --amber2:   #e8814a;
+    --coral:    #dc2626;
+    --green:    #15803d;
+    --teal:     #0e7490;
+    --blue:     #1d4ed8;
+    --purple:   #7c3aed;
+    --slate:    #57534e;
+    --radius:   12px;
+    --mono: 'Roboto Mono', 'Fira Code', monospace;
+    --sans: 'Outfit', system-ui, sans-serif;
+    /* semantic aliases */
+    --cyan:        #9b3d14;
+    --amber2:      #e8814a;
+    --surface-code:#fdf6f0;
+    --green2:      #15803d;
+    --gold:        #c4511c;
+    --gold2:       #e8814a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.75;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* ━━ PROGRESS ━━ */
+  #progressBar {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: linear-gradient(90deg, var(--rust), var(--amber2), var(--rust2));
+    z-index: 1000; transition: width .1s linear;
+    box-shadow: 0 0 10px rgba(155,61,20,.2);
+  }
+
+  /* ━━ HERO ━━ */
+  .hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #8b3a1a 0%, #a04020 50%, #7a3010 100%);
+    border: 1px solid var(--border2);
+    border-radius: 18px;
+    padding: 40px 36px 32px;
+    margin-bottom: 32px;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -80px; right: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(220,100,30,.12) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: '';
+    position: absolute; bottom: -40px; left: 40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(180,80,20,.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: rgba(255,235,210,.95);
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.35);
+    border-radius: 20px; padding: 4px 12px; margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: 30px; font-weight: 800; line-height: 1.2;
+    margin-bottom: 10px;
+    color: #fff;
+  }
+  .hero h1 span {
+    background: linear-gradient(135deg, #fff, rgba(255,220,180,.9));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub { color: rgba(255,235,210,.85); font-size: 14.5px; max-width: 600px; margin-bottom: 20px; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .chip {
+    font-size: 11.5px; font-weight: 600; padding: 4px 12px;
+    border-radius: 20px; border: 1px solid;
+  }
+  .chip-c { color: var(--cyan);   border-color: rgba(155,61,20,.3);  background: rgba(155,61,20,.07); }
+  .chip-a { color: var(--amber);  border-color: rgba(196,81,28,.3);   background: rgba(196,81,28,.07); }
+  .chip-b { color: var(--blue);   border-color: rgba(29,78,216,.3);  background: rgba(29,78,216,.07); }
+  .chip-g { color: var(--green);  border-color: rgba(21,128,61,.3);  background: rgba(21,128,61,.07); }
+  .chip-p { color: var(--purple); border-color: rgba(124,58,237,.3); background: rgba(124,58,237,.07);}
+  /* chips INSIDE the hero (dark bg) */
+  .hero .chip-c { color: rgba(255,235,210,.9); border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.12); }
+  .hero .chip-a { color: rgba(255,235,210,.9); border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.12); }
+  .hero .chip-b { color: rgba(200,220,255,.95); border-color: rgba(200,220,255,.35);  background: rgba(255,255,255,.12); }
+  .hero .chip-g { color: rgba(180,255,200,.9); border-color: rgba(180,255,200,.35);  background: rgba(255,255,255,.12); }
+  .hero .chip-p { color: rgba(220,200,255,.95); border-color: rgba(220,200,255,.35); background: rgba(255,255,255,.12); }
+
+  .toc { display: flex; flex-wrap: wrap; gap: 7px; }
+  .toc a {
+    font-size: 11.5px; font-weight: 600; padding: 4px 10px;
+    border-radius: 16px; background: rgba(155,61,20,.05);
+    color: var(--cyan); text-decoration: none; border: 1px solid rgba(155,61,20,.25);
+    transition: background .15s;
+  }
+  .toc a:hover { background: rgba(155,61,20,.1); }
+
+  /* ━━ SECTION CARDS ━━ */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px 30px 26px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .section::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: linear-gradient(180deg, var(--rust), var(--amber2), transparent);
+    border-radius: 3px 0 0 3px;
+  }
+  .sec-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+  .sec-num {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    color: var(--rust); background: rgba(155,61,20,.1);
+    border: 1px solid rgba(155,61,20,.25);
+    border-radius: 6px; padding: 3px 9px; white-space: nowrap; margin-top: 3px;
+  }
+  .sec-title { font-size: 18px; font-weight: 800; line-height: 1.25; }
+  .sec-title .hl { color: var(--cyan); }
+  .sec-quote {
+    font-size: 14.5px; font-style: italic; color: var(--muted);
+    border-left: 2px solid var(--cyan); padding-left: 14px; margin-bottom: 18px;
+  }
+
+  /* ━━ TYPOGRAPHY ━━ */
+  h3 {
+    font-size: 11px; font-weight: 700; color: var(--cyan);
+    text-transform: uppercase; letter-spacing: 1.5px; margin: 22px 0 10px;
+  }
+  p  { color: var(--text); margin-bottom: 12px; }
+  strong { color: var(--rust); font-weight: 700; }
+  em { color: var(--cyan); font-style: normal; font-weight: 600; }
+
+  /* ━━ CODE ━━ */
+  pre {
+    background: #fdf6f0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.65;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  code { font-family: var(--mono); font-size: .9em; }
+  .kw  { color: #1d4ed8; }
+  .fn  { color: var(--cyan); }
+  .str { color: var(--green); }
+  .num { color: var(--amber); }
+  .cmt { color: #7a5a46; font-style: italic; }
+  .cls { color: var(--amber2); }
+  .op  { color: var(--muted); }
+
+  .out {
+    background: #fdf6f0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 16px;
+    font-family: var(--mono); font-size: 12.5px;
+    color: var(--green); margin: 4px 0 14px;
+  }
+  .out-lbl { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 4px; }
+
+  /* ━━ CALLOUTS ━━ */
+  .callout {
+    border-radius: 10px; padding: 14px 16px; margin: 14px 0;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .callout-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+  .callout-body { flex: 1; }
+  .callout-body b { display: block; font-size: 13px; color: var(--amber2); margin-bottom: 4px; }
+  .callout-body p { margin: 0; font-size: 13.5px; }
+  .c-cyan   { background: rgba(155,61,20,.06);  border-left: 3px solid var(--cyan); }
+  .c-amber  { background: rgba(196,81,28,.06);   border-left: 3px solid var(--amber); }
+  .c-red    { background: rgba(220,38,38,.06);   border-left: 3px solid var(--coral); }
+  .c-green  { background: rgba(21,128,61,.06);  border-left: 3px solid var(--green); }
+  .c-purple { background: rgba(124,58,237,.06); border-left: 3px solid var(--purple);}
+
+  /* ━━ CONCEPT DIAGRAMS ━━ */
+  .diagram {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+    text-align: center;
+  }
+  .diagram figcaption { font-size: 12px; color: var(--muted); margin-top: 12px; font-style: italic; }
+
+  /* ━━ DEMOS ━━ */
+  .demo {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin: 16px 0;
+  }
+  .demo-hd {
+    font-size: 11.5px; font-weight: 700; color: var(--cyan);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 7px;
+  }
+  .demo-hd::before { content: '⚡'; font-size: 14px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 15px; border-radius: 8px; font-family: var(--sans);
+    font-size: 13px; font-weight: 700; cursor: pointer; border: none;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn:hover { opacity: .85; transform: translateY(-1px); }
+  .btn-c  { background: var(--rust);   color: #fff; }
+  .btn-a  { background: var(--amber);  color: #fff; }
+  .btn-b  { background: var(--blue);   color: #fff; }
+  .btn-p  { background: var(--purple); color: #fff; }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+
+  .demo-out {
+    background: #fdf6f0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-family: var(--mono); font-size: 13px;
+    min-height: 40px; color: var(--cyan);
+    white-space: pre-wrap; margin-top: 10px;
+  }
+
+  input[type=range] { accent-color: var(--cyan); width: 100%; }
+  input[type=text], select {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 7px; color: var(--text);
+    font-family: var(--mono); font-size: 13px; padding: 6px 10px;
+  }
+  input[type=text]:focus, select:focus { outline: none; border-color: var(--cyan); }
+  label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+
+  /* ━━ TABLES ━━ */
+  .tbl { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  .tbl th {
+    background: var(--surface3);
+    padding: 10px 14px; text-align: left;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .8px; color: var(--muted);
+    border-bottom: 2px solid var(--border2);
+  }
+  .tbl td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: rgba(155,61,20,.04); }
+  .tbl code { font-family: var(--mono); font-size: 12px; color: var(--cyan); }
+  .yes { color: var(--green); font-weight: 700; }
+  .no  { color: var(--coral); font-weight: 700; }
+
+  /* ━━ STORY CARD ━━ */
+  .story {
+    background: linear-gradient(135deg, var(--surface2), var(--surface3));
+    border: 1px solid rgba(155,61,20,.25);
+    border-radius: 12px; padding: 22px 24px; margin-bottom: 20px;
+  }
+  .story-label { font-size: 11px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+  /* ━━ QUIZ ━━ */
+  .q-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+  .q-text { font-weight: 700; margin-bottom: 12px; font-size: 14.5px; }
+  .q-opt {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 7px; cursor: pointer;
+    margin-bottom: 6px; border: 1px solid transparent;
+    transition: all .15s; font-size: 13.5px;
+  }
+  .q-opt:hover { background: rgba(155,61,20,.06); border-color: rgba(155,61,20,.25); }
+  .q-opt input { accent-color: var(--cyan); }
+  .q-opt.correct  { background: rgba(21,128,61,.1);   border-color: var(--green); }
+  .q-opt.wrong    { background: rgba(220,38,38,.08);   border-color: var(--coral); }
+  .q-fb { font-size: 13px; padding: 10px 12px; border-radius: 7px; margin-top: 10px; display: none; }
+  .q-fb.show { display: block; }
+  .q-fb.ok  { background: rgba(21,128,61,.1);   color: var(--green); }
+  .q-fb.err { background: rgba(220,38,38,.08);   color: var(--coral); }
+
+  /* ━━ SPLIT ━━ */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  @media (max-width: 600px) { .split { grid-template-columns: 1fr; } }
+
+  /* ━━ BADGE ━━ */
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px; margin-right: 4px; vertical-align: middle;
+  }
+  .badge-c { background: rgba(155,61,20,.1);  color: var(--rust); border: 1px solid rgba(155,61,20,.3); }
+  .badge-a { background: rgba(196,81,28,.1);   color: var(--amber); border: 1px solid rgba(196,81,28,.3); }
+
+
+  /* ━━ SUMMARY ROW ━━ */
+  .s-row { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .s-row:last-child { border-bottom: none; }
+  .s-q { flex: 0 0 230px; font-size: 13px; color: var(--muted); }
+  .s-code { flex: 1; font-family: var(--mono); font-size: 12px; color: var(--rust); background: var(--surface2); border-radius: 5px; padding: 4px 9px; }
+</style>
+</head>
+<body>
+<div id="progressBar"></div>
+
+<!-- ━━ HERO ━━ -->
+<div class="hero">
+  <div class="hero-eyebrow">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
+    Data Visualization · Lecture 1 of 2
+  </div>
+  <h1>Mastering <span>Matplotlib</span></h1>
+  <p class="hero-sub">From a quick exploratory chart to a board-ready slide that a room reads in five seconds. Same data — completely different craft.</p>
+  <div class="chip-row">
+    <span class="chip chip-c">Figure / Axes / Axis</span>
+    <span class="chip chip-a">Exploratory vs Explanatory</span>
+    <span class="chip chip-b">Object API</span>
+    <span class="chip chip-g">Styling &amp; Titles</span>
+    <span class="chip chip-p">Subplots &amp; Dashboards</span>
+    <span class="chip chip-c">Chart Selection</span>
+    <span class="chip chip-a">Stacked &amp; Dodged Bars</span>
+  </div>
+  <div class="toc">
+    <a href="#s00">00 Story</a>
+    <a href="#s01">01 Why Visualize</a>
+    <a href="#s02">02 Architecture</a>
+    <a href="#s03">03 Styling &amp; Titles</a>
+    <a href="#s04">04 Subplots</a>
+    <a href="#s05">05 Chart Selection</a>
+    <a href="#s06">06 Stacked &amp; Dodged</a>
+    <a href="#s07">07 AI Delegation</a>
+    <a href="#s08">08 Quiz</a>
+  </div>
+</div>
+
+<!-- ━━ 00 STORY ━━ -->
+<div class="section" id="s00">
+  <div class="sec-header">
+    <span class="sec-num">00</span>
+    <div>
+      <div class="sec-title">🎮 Review Week at the Studio</div>
+    </div>
+  </div>
+
+  <div class="story">
+    <div class="story-label">📌 The Scenario</div>
+    <p>You are the data analyst at a game publisher. It is review week — the <strong>Head of Studio</strong> is building the quarterly board deck from the full video-game sales catalogue (vgsales).</p>
+    <p><em>"I do not want twelve charts. For each question I want ONE chart the board reads in five seconds. Make them obvious."</em></p>
+    <p>That is the gap this lecture closes: the difference between a chart <strong>you</strong> make for yourself and a chart <strong>a room</strong> can read.</p>
+  </div>
+
+  <pre><code><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">import</span> seaborn <span class="kw">as</span> sns
+
+<span class="op">!</span>gdown <span class="num">1iwgPA5Y8sjhnRUhSfV03EWKJMg4xw_x5</span> -O vgsales.csv
+
+vg = pd.<span class="fn">read_csv</span>(<span class="str">'vgsales.csv'</span>)
+vg.<span class="fn">head</span>()
+<span class="cmt"># Columns: Name, Platform, Year, Genre, Publisher, NA_Sales, EU_Sales, JP_Sales, Global_Sales</span></code></pre>
+
+  <h3>The 4 Business Questions</h3>
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Board Question</th><th>Skill It Needs</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Make the leading genre obvious at a glance</td><td>Sorting + colour with intent</td></tr>
+      <tr><td>2</td><td>Make the top earner stand out on a board slide</td><td>Single highlight, finding in title</td></tr>
+      <tr><td>3</td><td>Four headline facts on one page</td><td>plt.subplots(2,2) + suptitle</td></tr>
+      <tr><td>4</td><td>How do we pick the right chart for any question?</td><td>Chart selection framework</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ━━ 01 WHY VISUALIZE ━━ -->
+<div class="section" id="s01">
+  <div class="sec-header">
+    <span class="sec-num">01</span>
+    <div class="sec-title">Why Visualize? — <span class="hl">Exploratory vs Explanatory</span></div>
+  </div>
+  <p class="sec-quote">❝ You already know how to make a chart. The real skill is knowing which of two jobs it is doing — and building it for that job.</p>
+
+  <p>Every chart does one of two jobs. Knowing which job you're on changes every decision:</p>
+
+  <table class="tbl">
+    <thead><tr><th></th><th>Exploratory <span class="badge badge-c">for you</span></th><th>Explanatory <span class="badge badge-a">for the board</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>Audience</strong></td><td>You</td><td>Someone else — board, client, manager</td></tr>
+      <tr><td><strong>Goal</strong></td><td>Find something</td><td>Communicate ONE finding</td></tr>
+      <tr><td><strong>How many</strong></td><td>Many, fast</td><td>One, polished</td></tr>
+      <tr><td><strong>Defaults</strong></td><td>Fine as-is</td><td>Never good enough</td></tr>
+      <tr><td><strong>Time on it</strong></td><td>Seconds</td><td>Deliberate</td></tr>
+    </tbody>
+  </table>
+
+  <div class="split">
+    <div>
+      <h3>Exploratory — quick, rough</h3>
+      <pre><code><span class="cmt"># Fast — just see the data</span>
+sns.<span class="fn">countplot</span>(data=vg, x=<span class="str">'Genre'</span>)
+plt.<span class="fn">show</span>()</code></pre>
+      <div class="callout c-cyan" style="margin-top:8px">
+        <span class="callout-icon">👤</span>
+        <div class="callout-body"><p>Works for you. Labels overlap, no title, default palette — that's fine. You're exploring.</p></div>
+      </div>
+    </div>
+    <div>
+      <h3>Explanatory — board-ready</h3>
+      <pre><code><span class="cmt"># Sorted, horizontal, one bar</span>
+<span class="cmt"># highlighted, finding in title</span>
+<span class="cmt"># → builds in Section 3</span></code></pre>
+      <div class="callout c-amber" style="margin-top:8px">
+        <span class="callout-icon">🏢</span>
+        <div class="callout-body"><p>Sorted, one colour for the finding, title = the sentence the chart makes.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout c-red">
+    <span class="callout-icon">⚠️</span>
+    <div class="callout-body">
+      <b>Explanatory ≠ "prettier"</b>
+      <p>It means <strong>one finding, made obvious</strong>. If a chart has no single point to make, keep it rough. Save your effort for the one that goes in the deck.</p>
+    </div>
+  </div>
+
+  <!-- CONCEPT DIAGRAM -->
+  <figure class="diagram">
+    <svg viewBox="0 0 580 160" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="'Plus Jakarta Sans',sans-serif" font-size="12">
+      <!-- Exploratory side -->
+      <rect x="20" y="10" width="240" height="140" rx="10" fill="#ffffff" stroke="#e8d5c4" stroke-width="1.5"/>
+      <text x="140" y="34" fill="#7a5a46" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">EXPLORATORY</text>
+      <!-- messy bars of different heights/colours -->
+      <rect x="40"  y="90" width="18" height="50" fill="rgba(155,61,20,.7)" opacity="1"/>
+      <rect x="66"  y="70" width="18" height="70" fill="#f59e0b" opacity=".6"/>
+      <rect x="92"  y="100" width="18" height="40" fill="rgba(250,204,21,.55)" opacity="1"/>
+      <rect x="118" y="60"  width="18" height="80" fill="#9b3d14" opacity=".6"/>
+      <rect x="144" y="80"  width="18" height="60" fill="#f97066" opacity=".6"/>
+      <rect x="170" y="110" width="18" height="30" fill="#9b3d14" opacity=".6"/>
+      <rect x="196" y="75"  width="18" height="65" fill="rgba(155,61,20,.7)" opacity="1"/>
+      <!-- x axis -->
+      <line x1="30" y1="143" x2="230" y2="143" stroke="#e8d5c4" stroke-width="1.5"/>
+      <text x="140" y="158" fill="#7a5a46" font-size="10" text-anchor="middle">Genre Genre Genre Genre Genre Genre Genre</text>
+      <text x="140" y="48"  fill="#7a5a46" font-size="10" text-anchor="middle">sns.countplot(data=vg, x='Genre')</text>
+
+      <!-- arrow -->
+      <text x="276" y="82" fill="#7a5a46" font-size="22" text-anchor="middle">→</text>
+      <text x="276" y="98" fill="#7a5a46" font-size="10" text-anchor="middle">craft</text>
+
+      <!-- Explanatory side -->
+      <rect x="316" y="10" width="244" height="140" rx="10" fill="#ffffff" stroke="rgba(155,61,20,.4)" stroke-width="1.5"/>
+      <text x="438" y="34" fill="#9b3d14" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">EXPLANATORY</text>
+      <!-- horizontal bars, all grey except top (cyan) -->
+      <rect x="390" y="46"  width="140" height="12" fill="rgba(155,61,20,.8)" rx="2"/>
+      <rect x="390" y="64"  width="100" height="12" fill="#2e3830" rx="2"/>
+      <rect x="390" y="82"  width="85"  height="12" fill="#2e3830" rx="2"/>
+      <rect x="390" y="100" width="70"  height="12" fill="#2e3830" rx="2"/>
+      <rect x="390" y="118" width="55"  height="12" fill="#2e3830" rx="2"/>
+      <text x="386" y="57"  fill="#94a3b8" font-size="9" text-anchor="end">Action</text>
+      <text x="386" y="75"  fill="#7a5a46" font-size="9" text-anchor="end">Sports</text>
+      <text x="386" y="93"  fill="#7a5a46" font-size="9" text-anchor="end">Shooter</text>
+      <text x="386" y="111" fill="#7a5a46" font-size="9" text-anchor="end">Role-Play</text>
+      <text x="386" y="129" fill="#7a5a46" font-size="9" text-anchor="end">Racing</text>
+      <text x="438" y="48"  fill="#9b3d14" font-size="10" text-anchor="middle">Action leads the catalogue ↑</text>
+      <text x="440" y="148" fill="#9b3d14" font-size="10" text-anchor="middle">Title = the finding</text>
+    </svg>
+    <figcaption>Same data — two jobs. Exploratory: fast, noisy. Explanatory: sorted, one highlight, title = the sentence the chart makes.</figcaption>
+  </figure>
+</div>
+
+<!-- ━━ 02 ARCHITECTURE ━━ -->
+<div class="section" id="s02">
+  <div class="sec-header">
+    <span class="sec-num">02</span>
+    <div class="sec-title">Matplotlib <span class="hl">Architecture</span> — Figure, Axes, Axis</div>
+  </div>
+  <p class="sec-quote">❝ Seaborn draws the chart. Matplotlib owns the canvas it is drawn on. Master the canvas and you can change anything.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Object</th><th>What it is</th><th>Analogy</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Figure</strong></td><td>The whole canvas / window</td><td>The sheet of paper</td></tr>
+      <tr><td><strong>Axes</strong></td><td>One plot on that canvas (its own title, x and y)</td><td>One chart drawn on the sheet</td></tr>
+      <tr><td><strong>Axis</strong></td><td>A single x <em>or</em> y ruler on an Axes</td><td>The number lines on that chart</td></tr>
+    </tbody>
+  </table>
+
+  <p>One <strong>Figure</strong> can hold many <strong>Axes</strong> — that's how dashboards work. Each Axes has two Axis objects: x and y.</p>
+
+  <!-- CONCEPT DIAGRAM: Figure / Axes / Axis nest -->
+  <figure class="diagram">
+    <svg viewBox="0 0 540 200" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="'Plus Jakarta Sans',sans-serif" font-size="12">
+      <!-- Figure outer -->
+      <rect x="20" y="10" width="500" height="175" rx="12" fill="#ffffff" stroke="rgba(155,61,20,.4)" stroke-width="2" stroke-dasharray="5,3"/>
+      <text x="30" y="28" fill="#f59e0b" font-size="11" font-weight="700">Figure  — the whole canvas (fig)</text>
+
+      <!-- Axes 1 -->
+      <rect x="40" y="38" width="200" height="130" rx="8" fill="#ffffff" stroke="rgba(155,61,20,.4)" stroke-width="1.5"/>
+      <text x="140" y="56" fill="#9b3d14" font-size="10" font-weight="700" text-anchor="middle">Axes  axes[0]</text>
+      <!-- fake chart inside -->
+      <line x1="60" y1="150" x2="220" y2="150" stroke="#e8d5c4" stroke-width="1"/>
+      <line x1="60" y1="150" x2="60"  y2="68"  stroke="#e8d5c4" stroke-width="1"/>
+      <rect x="75"  y="110" width="22" height="40" fill="rgba(155,61,20,.4)" rx="2"/>
+      <rect x="105" y="90"  width="22" height="60" fill="#2e3830" rx="2"/>
+      <rect x="135" y="100" width="22" height="50" fill="#2e3830" rx="2"/>
+      <rect x="165" y="80"  width="22" height="70" fill="#2e3830" rx="2"/>
+      <!-- Axis labels -->
+      <text x="140" y="166" fill="#7a5a46" font-size="9" text-anchor="middle">x-Axis (Axis)</text>
+      <text x="52"  y="110" fill="#7a5a46" font-size="9" text-anchor="middle" transform="rotate(-90,52,110)">y-Axis (Axis)</text>
+
+      <!-- Axes 2 -->
+      <rect x="260" y="38" width="240" height="130" rx="8" fill="#ffffff" stroke="rgba(155,61,20,.4)" stroke-width="1.5"/>
+      <text x="380" y="56" fill="#9b3d14" font-size="10" font-weight="700" text-anchor="middle">Axes  axes[1]</text>
+      <line x1="280" y1="150" x2="480" y2="150" stroke="#e8d5c4" stroke-width="1"/>
+      <line x1="280" y1="150" x2="280" y2="68"  stroke="#e8d5c4" stroke-width="1"/>
+      <polyline points="295,130 325,100 365,115 405,80 445,90 475,70" fill="none" stroke="rgba(155,61,20,.7)" stroke-width="2"/>
+      <text x="380" y="166" fill="#7a5a46" font-size="9" text-anchor="middle">x-Axis (Axis)</text>
+
+      <!-- label at right -->
+      <text x="516" y="96"  fill="#f59e0b" font-size="10" text-anchor="middle" transform="rotate(90,516,96)">Figure</text>
+    </svg>
+    <figcaption>Figure = sheet of paper. Each Axes = one chart on it. Each Axis = the x or y ruler on a chart. fig.subplots(1,2) gives you two Axes side-by-side on one Figure.</figcaption>
+  </figure>
+
+  <h3>Two Styles — plt. vs Object API</h3>
+  <div class="split">
+    <div>
+      <p><strong>State machine (plt.)</strong> — works for one chart, breaks with more:</p>
+      <pre><code>sns.<span class="fn">countplot</span>(data=vg, x=<span class="str">'Genre'</span>)
+plt.<span class="fn">title</span>(<span class="str">'Games by Genre'</span>)   <span class="cmt"># guesses</span>
+plt.<span class="fn">show</span>()</code></pre>
+    </div>
+    <div>
+      <p><strong>Object API</strong> — professional default, explicit:</p>
+      <pre><code>fig, ax = plt.<span class="fn">subplots</span>(figsize=(<span class="num">7</span>,<span class="num">4</span>))
+sns.<span class="fn">histplot</span>(data=vg, x=<span class="str">'Global_Sales'</span>,
+            bins=<span class="num">30</span>, ax=ax)      <span class="cmt"># draw ONTO ax</span>
+ax.<span class="fn">set_title</span>(<span class="str">'Sales distribution'</span>)
+ax.<span class="fn">set_xlim</span>(<span class="num">0</span>, <span class="num">5</span>)
+plt.<span class="fn">show</span>()</code></pre>
+    </div>
+  </div>
+
+  <div class="callout c-red">
+    <span class="callout-icon">🚨</span>
+    <div class="callout-body">
+      <b>Never mix the two styles</b>
+      <p>Once you write <code>fig, ax = plt.subplots()</code>, finish with <code>ax.</code> methods. Using <code>plt.title()</code> afterward sets it on <em>the current</em> Axes — which may not be the one you think.</p>
+    </div>
+  </div>
+
+  <h3>Key ax. Methods</h3>
+  <table class="tbl">
+    <thead><tr><th>Method</th><th>What it sets</th></tr></thead>
+    <tbody>
+      <tr><td><code>ax.set_title(...)</code></td><td>Title of this plot</td></tr>
+      <tr><td><code>ax.set_xlabel / set_ylabel</code></td><td>Axis labels</td></tr>
+      <tr><td><code>ax.set_xlim / set_ylim</code></td><td>Axis range (zoom)</td></tr>
+      <tr><td><code>ax.set_xticks / set_xticklabels</code></td><td>Tick positions and text</td></tr>
+      <tr><td><code>ax.legend(...)</code></td><td>Legend for this plot</td></tr>
+      <tr><td><code>ax.spines['top'].set_visible(False)</code></td><td>Hide a border line</td></tr>
+    </tbody>
+  </table>
+
+  <!-- DEMO: API Explorer -->
+  <div class="demo">
+    <div class="demo-hd">Object API — Method Lookup</div>
+    <label>What do you want to do?</label>
+    <div class="btn-row">
+      <button class="btn btn-c btn-sm" onclick="apiLook('title')">Set title</button>
+      <button class="btn btn-c btn-sm" onclick="apiLook('xlabel')">Label axis</button>
+      <button class="btn btn-c btn-sm" onclick="apiLook('xlim')">Zoom range</button>
+      <button class="btn btn-c btn-sm" onclick="apiLook('spines')">Remove border</button>
+      <button class="btn btn-c btn-sm" onclick="apiLook('legend')">Add legend</button>
+      <button class="btn btn-c btn-sm" onclick="apiLook('ticks')">Set ticks</button>
+      <button class="btn btn-a btn-sm" onclick="apiLook('grid')">Add grid</button>
+    </div>
+    <div class="demo-out" id="api-out">Select a task above ↑</div>
+  </div>
+</div>
+
+<!-- ━━ 03 STYLING & TITLES ━━ -->
+<div class="section" id="s03">
+  <div class="sec-header">
+    <span class="sec-num">03</span>
+    <div class="sec-title"><span class="hl">Styling &amp; Titles</span> — Turning Data into a Sentence</div>
+  </div>
+  <p class="sec-quote">❝ Styling removes what distracts. A title that states the finding adds the one thing that matters.</p>
+
+  <h3>Step-by-step: Plain → Board-ready</h3>
+  <p><strong>Step 1</strong> — the plain chart (exploratory):</p>
+  <pre><code>avg_genre = vg.<span class="fn">groupby</span>(<span class="str">'Genre'</span>)[<span class="str">'Global_Sales'</span>].<span class="fn">mean</span>().<span class="fn">sort_values</span>(ascending=<span class="kw">False</span>)
+
+fig, ax = plt.<span class="fn">subplots</span>(figsize=(<span class="num">8</span>, <span class="num">4.5</span>))
+ax.<span class="fn">barh</span>(avg_genre.index[::-<span class="num">1</span>], avg_genre.values[::-<span class="num">1</span>])
+plt.<span class="fn">show</span>()
+<span class="cmt"># Correct — but makes no point. What's the finding?</span></code></pre>
+
+  <p><strong>Step 2</strong> — colour with intent + declutter:</p>
+  <pre><code>fig, ax = plt.<span class="fn">subplots</span>(figsize=(<span class="num">8</span>, <span class="num">4.5</span>))
+bars = ax.<span class="fn">barh</span>(avg_genre.index[::-<span class="num">1</span>], avg_genre.values[::-<span class="num">1</span>],
+               color=<span class="str">'#9aa7b8'</span>)             <span class="cmt"># ① all grey</span>
+
+bars[-<span class="num">1</span>].<span class="fn">set_color</span>(<span class="str">'#2E86AB'</span>)              <span class="cmt"># ② highlight ONE bar</span>
+
+ax.<span class="fn">set_title</span>(<span class="str">'Platform games earn the most per title'</span>, loc=<span class="str">'left'</span>)  <span class="cmt"># ③ finding in title</span>
+ax.<span class="fn">set_xlabel</span>(<span class="str">'Avg global sales (M units)'</span>)
+ax.<span class="fn">set_ylabel</span>(<span class="str">''</span>)
+ax.spines[<span class="str">'top'</span>].<span class="fn">set_visible</span>(<span class="kw">False</span>)       <span class="cmt"># ④ remove chartjunk</span>
+ax.spines[<span class="str">'right'</span>].<span class="fn">set_visible</span>(<span class="kw">False</span>)
+plt.<span class="fn">show</span>()</code></pre>
+
+  <!-- CONCEPT DIAGRAM: 3 craft rules -->
+  <figure class="diagram">
+    <svg viewBox="0 0 560 110" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="'Plus Jakarta Sans',sans-serif" font-size="12">
+      <!-- Rule 1 -->
+      <rect x="20" y="15" width="155" height="80" rx="8" fill="#ffffff" stroke="rgba(155,61,20,.35)" stroke-width="1.5"/>
+      <text x="97" y="38" fill="#9b3d14" font-size="10" font-weight="700" text-anchor="middle">① ONE Highlight Colour</text>
+      <rect x="40" y="50" width="90" height="10" rx="2" fill="#2e3830"/>
+      <rect x="40" y="66" width="90" height="10" rx="2" fill="#2e3830"/>
+      <rect x="40" y="82" width="90" height="10" rx="2" fill="rgba(155,61,20,.8)"/>
+      <text x="140" y="88" fill="#9b3d14" font-size="9">TOP</text>
+
+      <!-- Rule 2 -->
+      <rect x="197" y="15" width="165" height="80" rx="8" fill="#ffffff" stroke="rgba(245,158,11,.3)" stroke-width="1.5"/>
+      <text x="280" y="38" fill="#f59e0b" font-size="10" font-weight="700" text-anchor="middle">② Title = The Finding</text>
+      <text x="280" y="58" fill="#7a5a46" font-size="10" text-anchor="middle">❌  "Sales by Genre"</text>
+      <text x="280" y="76" fill="#f59e0b" font-size="10" text-anchor="middle">✅  "Platform games earn most"</text>
+      <text x="280" y="90" fill="#7a5a46" font-size="9" text-anchor="middle">The sentence the chart makes</text>
+
+      <!-- Rule 3 -->
+      <rect x="384" y="15" width="156" height="80" rx="8" fill="#ffffff" stroke="rgba(220,38,38,.4)" stroke-width="1.5"/>
+      <text x="462" y="38" fill="#f97066" font-size="10" font-weight="700" text-anchor="middle">③ One Finding / Chart</text>
+      <text x="462" y="58" fill="#7a5a46" font-size="10" text-anchor="middle">Two messages?</text>
+      <text x="462" y="74" fill="#f97066" font-size="10" text-anchor="middle">→ Make two charts.</text>
+      <text x="462" y="90" fill="#7a5a46" font-size="9" text-anchor="middle">Complexity ≠ thoroughness</text>
+    </svg>
+    <figcaption>Three habits that do 80% of the work: one highlight colour, finding in the title, one finding per chart.</figcaption>
+  </figure>
+
+  <h3>Legend, Grid &amp; Ticks</h3>
+  <pre><code><span class="cmt"># Action vs Sports releases by year</span>
+yrg = (vg[vg[<span class="str">'Genre'</span>].<span class="fn">isin</span>([<span class="str">'Action'</span>, <span class="str">'Sports'</span>])]
+       .<span class="fn">groupby</span>([<span class="str">'Year'</span>, <span class="str">'Genre'</span>]).<span class="fn">size</span>().<span class="fn">reset_index</span>(name=<span class="str">'Releases'</span>))
+
+fig, ax = plt.<span class="fn">subplots</span>(figsize=(<span class="num">8</span>, <span class="num">4.5</span>))
+<span class="kw">for</span> g, c <span class="kw">in</span> [(<span class="str">'Action'</span>, <span class="str">'#22c55e'</span>), (<span class="str">'Sports'</span>, <span class="str">'#f87171'</span>)]:
+    d = yrg[yrg[<span class="str">'Genre'</span>] == g]
+    ax.<span class="fn">plot</span>(d[<span class="str">'Year'</span>], d[<span class="str">'Releases'</span>], label=g, color=c)
+
+ax.<span class="fn">set_xticks</span>(<span class="fn">range</span>(<span class="num">1996</span>, <span class="num">2017</span>, <span class="num">4</span>))          <span class="cmt"># custom ticks</span>
+ax.<span class="fn">grid</span>(<span class="kw">True</span>, axis=<span class="str">'y'</span>, alpha=<span class="num">0.3</span>)           <span class="cmt"># faint gridlines</span>
+ax.<span class="fn">legend</span>(loc=<span class="str">'upper right'</span>, ncol=<span class="num">2</span>, frameon=<span class="kw">False</span>, title=<span class="str">'Genre'</span>)
+plt.<span class="fn">show</span>()</code></pre>
+
+  <table class="tbl">
+    <thead><tr><th>Control</th><th>Call</th><th>Useful options</th></tr></thead>
+    <tbody>
+      <tr><td>Legend</td><td><code>ax.legend(...)</code></td><td>loc, ncol, frameon, title</td></tr>
+      <tr><td>Gridlines</td><td><code>ax.grid(True, ...)</code></td><td>axis='x'/'y', alpha</td></tr>
+      <tr><td>Ticks</td><td><code>ax.set_xticks(...) / ax.tick_params(...)</code></td><td>positions, rotation, size</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-cyan">
+    <span class="callout-icon">💡</span>
+    <div class="callout-body">
+      <b>Legend outside the data area</b>
+      <p>When the legend crowds the chart: <code>ax.legend(loc=(1.02, 0.5))</code> — x&gt;1 pushes it right of the plot area.</p>
+    </div>
+  </div>
+
+  <!-- DEMO: Craft Builder -->
+  <div class="demo">
+    <div class="demo-hd">Board-Chart Craft Checklist</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Tick the craft rules you've applied — see how the chart "score" improves.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--text)">
+        <input type="checkbox" id="cb1" onchange="craftScore()" style="accent-color:var(--cyan);width:16px;height:16px">
+        Horizontal bars (sorted descending)
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--text)">
+        <input type="checkbox" id="cb2" onchange="craftScore()" style="accent-color:var(--cyan);width:16px;height:16px">
+        All bars grey, one highlight colour
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--text)">
+        <input type="checkbox" id="cb3" onchange="craftScore()" style="accent-color:var(--cyan);width:16px;height:16px">
+        Title states the finding (not just the data)
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--text)">
+        <input type="checkbox" id="cb4" onchange="craftScore()" style="accent-color:var(--cyan);width:16px;height:16px">
+        Removed top and right spines
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--text)">
+        <input type="checkbox" id="cb5" onchange="craftScore()" style="accent-color:var(--cyan);width:16px;height:16px">
+        Axis labels say units (e.g. "M units"), y-label cleared
+      </label>
+    </div>
+    <div class="demo-out" id="craft-out">0 / 5 — Exploratory rough draft</div>
+  </div>
+</div>
+
+<!-- ━━ 04 SUBPLOTS ━━ -->
+<div class="section" id="s04">
+  <div class="sec-header">
+    <span class="sec-num">04</span>
+    <div class="sec-title"><span class="hl">Subplots</span> &amp; the Mini Dashboard</div>
+  </div>
+  <p class="sec-quote">❝ One Figure, many Axes. That is all a dashboard is — several charts on one canvas, telling one connected story.</p>
+
+  <p><code>plt.subplots(nrows, ncols)</code> returns the Figure and a <strong>grid of Axes</strong> you index like a table:</p>
+
+  <pre><code><span class="cmt"># 1 row, 2 columns</span>
+fig, axes = plt.<span class="fn">subplots</span>(<span class="num">1</span>, <span class="num">2</span>, figsize=(<span class="num">14</span>, <span class="num">5</span>))
+
+sns.<span class="fn">barplot</span>(data=vg, y=<span class="str">'Genre'</span>, x=<span class="str">'Global_Sales'</span>, errorbar=<span class="kw">None</span>, ax=axes[<span class="num">0</span>])
+axes[<span class="num">0</span>].<span class="fn">set_title</span>(<span class="str">'Average sales per game'</span>)
+
+sns.<span class="fn">lineplot</span>(data=yr, x=<span class="str">'Year'</span>, y=<span class="str">'Name'</span>, ax=axes[<span class="num">1</span>])
+axes[<span class="num">1</span>].<span class="fn">set_title</span>(<span class="str">'Releases per year'</span>)
+
+fig.<span class="fn">tight_layout</span>()   <span class="cmt"># stop titles / labels overlapping</span>
+plt.<span class="fn">show</span>()</code></pre>
+
+  <div class="callout c-amber">
+    <span class="callout-icon">🗺️</span>
+    <div class="callout-body">
+      <b>Indexing the grid</b>
+      <p>1×2: <code>axes[0]</code>, <code>axes[1]</code><br>
+         2×2: <code>axes[0,0]</code> top-left · <code>axes[0,1]</code> top-right · <code>axes[1,0]</code> bottom-left · <code>axes[1,1]</code> bottom-right</p>
+    </div>
+  </div>
+
+  <!-- CONCEPT DIAGRAM: subplot grid -->
+  <figure class="diagram">
+    <svg viewBox="0 0 540 220" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="'Plus Jakarta Sans',sans-serif" font-size="12">
+      <!-- Figure outer -->
+      <rect x="20" y="10" width="500" height="195" rx="12" fill="#ffffff" stroke="rgba(155,61,20,.4)" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="30" y="28" fill="#f59e0b" font-size="11" font-weight="700">fig  =  plt.subplots(2, 2, figsize=(13, 8))</text>
+      <!-- axes[0,0] -->
+      <rect x="40"  y="38" width="210" height="75" rx="6" fill="#ffffff" stroke="rgba(155,61,20,.4)" stroke-width="1.2"/>
+      <text x="145" y="57" fill="#9b3d14" font-size="10" font-weight="700" text-anchor="middle">axes[0, 0]  top-left</text>
+      <text x="145" y="73" fill="#7a5a46" font-size="10" text-anchor="middle">Genre countplot</text>
+      <text x="145" y="89" fill="#94a3b8" font-size="10" text-anchor="middle">Catalogue is largest in Action</text>
+      <!-- axes[0,1] -->
+      <rect x="270" y="38" width="230" height="75" rx="6" fill="#ffffff" stroke="rgba(155,61,20,.4)" stroke-width="1.2"/>
+      <text x="385" y="57" fill="#9b3d14" font-size="10" font-weight="700" text-anchor="middle">axes[0, 1]  top-right</text>
+      <text x="385" y="73" fill="#7a5a46" font-size="10" text-anchor="middle">Global_Sales histogram</text>
+      <text x="385" y="89" fill="#94a3b8" font-size="10" text-anchor="middle">Most titles sell little; a few are hits</text>
+      <!-- axes[1,0] -->
+      <rect x="40"  y="128" width="210" height="62" rx="6" fill="#ffffff" stroke="rgba(155,61,20,.4)" stroke-width="1.2"/>
+      <text x="145" y="147" fill="#9b3d14" font-size="10" font-weight="700" text-anchor="middle">axes[1, 0]  bottom-left</text>
+      <text x="145" y="162" fill="#7a5a46" font-size="10" text-anchor="middle">Releases per year (line)</text>
+      <text x="145" y="178" fill="#94a3b8" font-size="10" text-anchor="middle">Releases peaked, then fell</text>
+      <!-- axes[1,1] -->
+      <rect x="270" y="128" width="230" height="62" rx="6" fill="#ffffff" stroke="rgba(155,61,20,.4)" stroke-width="1.2"/>
+      <text x="385" y="147" fill="#9b3d14" font-size="10" font-weight="700" text-anchor="middle">axes[1, 1]  bottom-right</text>
+      <text x="385" y="162" fill="#7a5a46" font-size="10" text-anchor="middle">Platform sales (bar)</text>
+      <text x="385" y="178" fill="#94a3b8" font-size="10" text-anchor="middle">Top 6 platforms dominate</text>
+      <!-- suptitle -->
+      <text x="270" y="208" fill="#f59e0b" font-size="11" text-anchor="middle">fig.suptitle('Video Game Sales — Catalogue Health at a Glance', fontsize=15)</text>
+    </svg>
+    <figcaption>plt.subplots(2,2) → axes is a 2D array. Use axes[row, col] to place each chart. fig.suptitle() is the headline for the whole figure. Always end with fig.tight_layout().</figcaption>
+  </figure>
+
+  <h3>Build the Mini Dashboard</h3>
+  <pre><code>gc  = vg[<span class="str">'Genre'</span>].<span class="fn">value_counts</span>()
+yr  = vg.<span class="fn">groupby</span>(<span class="str">'Year'</span>)[<span class="str">'Name'</span>].<span class="fn">count</span>().<span class="fn">reset_index</span>()
+top = vg[<span class="str">'Platform'</span>].<span class="fn">value_counts</span>().<span class="fn">head</span>(<span class="num">6</span>).index
+tot = (vg[vg[<span class="str">'Platform'</span>].<span class="fn">isin</span>(top)]
+       .<span class="fn">groupby</span>(<span class="str">'Platform'</span>)[<span class="str">'Global_Sales'</span>].<span class="fn">sum</span>()
+       .<span class="fn">sort_values</span>(ascending=<span class="kw">False</span>))
+
+fig, axes = plt.<span class="fn">subplots</span>(<span class="num">2</span>, <span class="num">2</span>, figsize=(<span class="num">13</span>, <span class="num">8</span>))
+
+sns.<span class="fn">barplot</span>(x=gc.values, y=gc.index, ax=axes[<span class="num">0</span>, <span class="num">0</span>])
+axes[<span class="num">0</span>, <span class="num">0</span>].<span class="fn">set_title</span>(<span class="str">'Catalogue is largest in Action'</span>, loc=<span class="str">'left'</span>)
+
+sns.<span class="fn">histplot</span>(data=vg, x=<span class="str">'Global_Sales'</span>, bins=<span class="num">30</span>, ax=axes[<span class="num">0</span>, <span class="num">1</span>])
+axes[<span class="num">0</span>, <span class="num">1</span>].<span class="fn">set_title</span>(<span class="str">'Most titles sell little; a few are hits'</span>, loc=<span class="str">'left'</span>)
+
+sns.<span class="fn">lineplot</span>(data=yr, x=<span class="str">'Year'</span>, y=<span class="str">'Name'</span>, ax=axes[<span class="num">1</span>, <span class="num">0</span>])
+axes[<span class="num">1</span>, <span class="num">0</span>].<span class="fn">set_title</span>(<span class="str">'Releases peaked, then fell'</span>, loc=<span class="str">'left'</span>)
+
+sns.<span class="fn">barplot</span>(x=tot.index, y=tot.values, ax=axes[<span class="num">1</span>, <span class="num">1</span>])
+axes[<span class="num">1</span>, <span class="num">1</span>].<span class="fn">set_title</span>(<span class="str">'Total sales for top-6 platforms'</span>, loc=<span class="str">'left'</span>)
+
+fig.<span class="fn">suptitle</span>(<span class="str">'Video Game Sales — Catalogue Health at a Glance'</span>, fontsize=<span class="num">15</span>)
+fig.<span class="fn">tight_layout</span>()
+plt.<span class="fn">show</span>()</code></pre>
+
+  <div class="callout c-red">
+    <span class="callout-icon">⚠️</span>
+    <div class="callout-body">
+      <b>Two dashboard failure modes</b>
+      <p><strong>Overcrowding</strong> — more than ~4 panels and nobody reads any.<br>
+      <strong>Clipping</strong> — labels cut off: always finish with <code>fig.tight_layout()</code>.<br>
+      A dashboard needs <em>one headline</em>; panels without a shared story are just four charts.</p>
+    </div>
+  </div>
+
+  <!-- DEMO: subplot index helper -->
+  <div class="demo">
+    <div class="demo-hd">Subplot Index Helper</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label>Rows</label>
+        <select id="sub-r" onchange="subIdx()" style="width:100%">
+          <option value="1">1</option>
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+        </select>
+      </div>
+      <div>
+        <label>Columns</label>
+        <select id="sub-c" onchange="subIdx()" style="width:100%">
+          <option value="1">1</option>
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+        </select>
+      </div>
+    </div>
+    <div class="demo-out" id="sub-out"></div>
+  </div>
+</div>
+
+<!-- ━━ 05 CHART SELECTION ━━ -->
+<div class="section" id="s05">
+  <div class="sec-header">
+    <span class="sec-num">05</span>
+    <div class="sec-title"><span class="hl">Chart Selection</span> Framework</div>
+  </div>
+  <p class="sec-quote">❝ Pick the chart from the question, never the question from the chart.</p>
+
+  <p>Two questions decide the chart:</p>
+
+  <h3>1. By data shape</h3>
+  <table class="tbl">
+    <thead><tr><th>If you have…</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>One categorical variable</td><td>Countplot / bar chart</td></tr>
+      <tr><td>One continuous variable</td><td>Histogram, KDE, box plot</td></tr>
+      <tr><td>Two continuous variables</td><td>Scatter, line (if one is time)</td></tr>
+      <tr><td>One categorical + one continuous</td><td>Grouped bar, grouped box</td></tr>
+      <tr><td>Two categorical variables</td><td>Stacked / dodged bar (Section 6)</td></tr>
+      <tr><td>Multivariate (3+)</td><td><span style="color:var(--muted)">→ DV-2 next lecture</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>2. By job</h3>
+  <table class="tbl">
+    <thead><tr><th></th><th>Explore</th><th>Explain</th></tr></thead>
+    <tbody>
+      <tr><td>How many charts</td><td>Many</td><td>The one that matters</td></tr>
+      <tr><td>Styling</td><td>Defaults</td><td>Title = finding, one highlight</td></tr>
+      <tr><td>Built with</td><td>sns.&lt;chart&gt;() quickly</td><td>fig, ax, ax. methods, colour, titles</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-cyan">
+    <span class="callout-icon">💡</span>
+    <div class="callout-body">
+      <b>The workflow in practice</b>
+      <p>Explore with quick Seaborn defaults → find the one chart that answers the question → turn <em>that one</em> into an explanatory chart with the tools from Sections 2–4.</p>
+    </div>
+  </div>
+
+  <!-- DEMO: Chart selector -->
+  <div class="demo">
+    <div class="demo-hd">Chart Selection Guide</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label>Variable types</label>
+        <select id="cs-vars" onchange="chartSelect()" style="width:100%">
+          <option value="cat1">1 categorical</option>
+          <option value="num1">1 continuous</option>
+          <option value="num2">2 continuous</option>
+          <option value="cat1num1">1 cat + 1 continuous</option>
+          <option value="cat2">2 categorical</option>
+          <option value="time">Time series</option>
+        </select>
+      </div>
+      <div>
+        <label>Job</label>
+        <select id="cs-job" onchange="chartSelect()" style="width:100%">
+          <option value="explore">Explore</option>
+          <option value="explain">Explain</option>
+        </select>
+      </div>
+    </div>
+    <div class="demo-out" id="cs-out"></div>
+  </div>
+</div>
+
+<!-- ━━ 06 STACKED & DODGED ━━ -->
+<div class="section" id="s06">
+  <div class="sec-header">
+    <span class="sec-num">06</span>
+    <div class="sec-title"><span class="hl">Stacked &amp; Dodged</span> Bars</div>
+  </div>
+  <p class="sec-quote">❝ A single bar gives one number per group. Split each bar by a second category and the board sees what it is made of.</p>
+
+  <h3>Stacked Bar — part-to-whole across groups</h3>
+  <pre><code>top_plat = vg[<span class="str">'Platform'</span>].<span class="fn">value_counts</span>().<span class="fn">head</span>(<span class="num">6</span>).index
+top_gen  = [<span class="str">'Action'</span>, <span class="str">'Sports'</span>, <span class="str">'Shooter'</span>, <span class="str">'Role-Playing'</span>]
+ct = pd.<span class="fn">crosstab</span>(vg[<span class="str">'Platform'</span>], vg[<span class="str">'Genre'</span>]).<span class="fn">loc</span>[top_plat, top_gen]
+
+ax = ct.<span class="fn">plot</span>(kind=<span class="str">'bar'</span>, stacked=<span class="kw">True</span>, figsize=(<span class="num">8</span>, <span class="num">4.5</span>))
+ax.<span class="fn">set_title</span>(<span class="str">'Number of games by platform and genre'</span>, loc=<span class="str">'left'</span>)
+ax.<span class="fn">set_ylabel</span>(<span class="str">'Number of games'</span>); ax.<span class="fn">set_xlabel</span>(<span class="str">''</span>)
+ax.<span class="fn">tick_params</span>(axis=<span class="str">'x'</span>, rotation=<span class="num">0</span>)
+plt.<span class="fn">show</span>()</code></pre>
+
+  <h3>Dodged (Grouped) Bar — compare segment sizes</h3>
+  <pre><code>sub = vg[vg[<span class="str">'Platform'</span>].<span class="fn">isin</span>(top_plat) & vg[<span class="str">'Genre'</span>].<span class="fn">isin</span>(top_gen)]
+
+fig, ax = plt.<span class="fn">subplots</span>(figsize=(<span class="num">9</span>, <span class="num">4.5</span>))
+sns.<span class="fn">countplot</span>(data=sub, x=<span class="str">'Platform'</span>, hue=<span class="str">'Genre'</span>, ax=ax,
+              order=<span class="fn">list</span>(top_plat), hue_order=top_gen)
+ax.<span class="fn">set_title</span>(<span class="str">'Genre counts per platform (dodged)'</span>)
+plt.<span class="fn">show</span>()</code></pre>
+
+  <!-- CONCEPT DIAGRAM: stacked vs dodged -->
+  <figure class="diagram">
+    <svg viewBox="0 0 540 170" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="'Plus Jakarta Sans',sans-serif" font-size="12">
+      <!-- Stacked -->
+      <text x="140" y="22" fill="#9b3d14" font-size="11" font-weight="700" text-anchor="middle">STACKED — total + composition</text>
+      <!-- bar 1 stacked -->
+      <rect x="50"  y="30" width="30" height="100" rx="2" fill="none"/>
+      <rect x="50"  y="80" width="30" height="50" fill="rgba(155,61,20,.8)" rx="2"/>
+      <rect x="50"  y="55" width="30" height="25" fill="rgba(155,61,20,.55)" rx="2"/>
+      <rect x="50"  y="30" width="30" height="25" fill="rgba(250,204,21,.5)" rx="2"/>
+      <text x="65" y="140" fill="#7a5a46" font-size="9" text-anchor="middle">PS2</text>
+
+      <rect x="90"  y="40" width="30" height="90" rx="2" fill="none"/>
+      <rect x="90"  y="90" width="30" height="40" fill="rgba(155,61,20,.8)" rx="2"/>
+      <rect x="90"  y="65" width="30" height="25" fill="rgba(155,61,20,.55)" rx="2"/>
+      <rect x="90"  y="40" width="30" height="25" fill="rgba(250,204,21,.5)" rx="2"/>
+      <text x="105" y="140" fill="#7a5a46" font-size="9" text-anchor="middle">DS</text>
+
+      <rect x="130" y="55" width="30" height="75" rx="2" fill="none"/>
+      <rect x="130" y="98" width="30" height="32" fill="rgba(155,61,20,.8)" rx="2"/>
+      <rect x="130" y="78" width="30" height="20" fill="rgba(155,61,20,.55)" rx="2"/>
+      <rect x="130" y="55" width="30" height="23" fill="rgba(250,204,21,.5)" rx="2"/>
+      <text x="145" y="140" fill="#7a5a46" font-size="9" text-anchor="middle">Wii</text>
+
+      <!-- baseline -->
+      <line x1="40" y1="130" x2="240" y2="130" stroke="#e8d5c4" stroke-width="1"/>
+      <text x="140" y="155" fill="#f59e0b" font-size="10" text-anchor="middle">Use when: total matters + what it's made of</text>
+      <text x="140" y="168" fill="#7a5a46" font-size="9" text-anchor="middle">pd.crosstab → ct.plot(kind='bar', stacked=True)</text>
+
+      <!-- Dodged -->
+      <text x="400" y="22" fill="#f59e0b" font-size="11" font-weight="700" text-anchor="middle">DODGED — compare within groups</text>
+      <!-- bar group 1 -->
+      <rect x="290" y="60"  width="18" height="70" fill="rgba(155,61,20,.8)" rx="2"/>
+      <rect x="310" y="80"  width="18" height="50" fill="rgba(155,61,20,.55)" rx="2"/>
+      <rect x="330" y="90"  width="18" height="40" fill="rgba(250,204,21,.5)" rx="2"/>
+      <text x="320" y="140" fill="#7a5a46" font-size="9" text-anchor="middle">PS2</text>
+
+      <rect x="362" y="70"  width="18" height="60" fill="rgba(155,61,20,.8)" rx="2"/>
+      <rect x="382" y="85"  width="18" height="45" fill="rgba(155,61,20,.55)" rx="2"/>
+      <rect x="402" y="100" width="18" height="30" fill="rgba(250,204,21,.5)" rx="2"/>
+      <text x="392" y="140" fill="#7a5a46" font-size="9" text-anchor="middle">DS</text>
+
+      <rect x="434" y="75"  width="18" height="55" fill="rgba(155,61,20,.8)" rx="2"/>
+      <rect x="454" y="92"  width="18" height="38" fill="rgba(155,61,20,.55)" rx="2"/>
+      <rect x="474" y="108" width="18" height="22" fill="rgba(250,204,21,.5)" rx="2"/>
+      <text x="464" y="140" fill="#7a5a46" font-size="9" text-anchor="middle">Wii</text>
+
+      <line x1="280" y1="130" x2="510" y2="130" stroke="#e8d5c4" stroke-width="1"/>
+      <text x="400" y="155" fill="#f59e0b" font-size="10" text-anchor="middle">Use when: segment comparison across groups matters</text>
+      <text x="400" y="168" fill="#7a5a46" font-size="9" text-anchor="middle">sns.countplot(hue='Genre')</text>
+    </svg>
+    <figcaption>Stacked: each bar shows the total and its composition. Dodged: bars side-by-side for direct segment comparison. Same data, different question.</figcaption>
+  </figure>
+
+  <div class="callout c-cyan">
+    <span class="callout-icon">💡</span>
+    <div class="callout-body">
+      <b>Stacked vs Dodged — decision rule</b>
+      <p><strong>Stacked:</strong> question is about the total and what it's made of.<br>
+      <strong>Dodged:</strong> question is about comparing one segment across categories.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ━━ 07 AI DELEGATION ━━ -->
+<div class="section" id="s07">
+  <div class="sec-header">
+    <span class="sec-num">07</span>
+    <div class="sec-title">🤖 Using AI Well — What to Delegate, What Stays Yours</div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Delegate to AI ✅</th><th>Keep for yourself 🧠</th></tr></thead>
+    <tbody>
+      <tr><td>Boilerplate (subplot grids, figure setup)</td><td>Choosing the chart for the question</td></tr>
+      <tr><td>Syntax you forget (tick formatting, legends)</td><td>Finding the insight worth showing</td></tr>
+      <tr><td>Refactoring <code>plt.</code> → <code>ax.</code></td><td>Deciding what to highlight and what to cut</td></tr>
+      <tr><td>Explaining an error / traceback</td><td>The title — the one sentence the chart makes</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-purple">
+    <span class="callout-icon">🤖</span>
+    <div class="callout-body">
+      <b>Useful AI prompts for Matplotlib</b>
+      <p>
+        "Rewrite this Matplotlib snippet using the object API with <code>fig, ax = plt.subplots()</code>…"<br>
+        "Give me a 2×2 subplot scaffold with suptitle and tight_layout — leave each Axes empty."<br>
+        AI hands you a fast exploratory chart. Turning it into an explanatory one is the judgement this lecture taught — that stays yours.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ━━ 08 QUIZ ━━ -->
+<div class="section" id="s08">
+  <div class="sec-header">
+    <span class="sec-num">08</span>
+    <div class="sec-title">🧠 Quick Quiz</div>
+  </div>
+
+  <div class="q-card" id="q1">
+    <div class="q-text">1. <code>fig, ax = plt.subplots()</code> — what does each variable hold?</div>
+    <label class="q-opt"><input type="radio" name="q1" value="a"> <span><code>fig</code> is one plot; <code>ax</code> is the whole window</span></label>
+    <label class="q-opt"><input type="radio" name="q1" value="b"> <span><code>fig</code> is the whole canvas; <code>ax</code> is a single plot on it ✅</span></label>
+    <label class="q-opt"><input type="radio" name="q1" value="c"> <span>Both are Axis (x/y ruler) objects</span></label>
+    <label class="q-opt"><input type="radio" name="q1" value="d"> <span><code>ax</code> must be styled only with <code>plt.</code> functions</span></label>
+    <div class="q-fb" id="f1"></div>
+  </div>
+
+  <div class="q-card" id="q2">
+    <div class="q-text">2. You drew <code>bars = ax.barh(...)</code>. Which line highlights only the top bar in blue?</div>
+    <label class="q-opt"><input type="radio" name="q2" value="a"> <span><code>ax.set_title('blue')</code></span></label>
+    <label class="q-opt"><input type="radio" name="q2" value="b"> <span><code>ax.set_xlim(0, 1)</code></span></label>
+    <label class="q-opt"><input type="radio" name="q2" value="c"> <span><code>bars[-1].set_color('#2E86AB')</code></span></label>
+    <label class="q-opt"><input type="radio" name="q2" value="d"> <span><code>ax.grid(True)</code></span></label>
+    <div class="q-fb" id="f2"></div>
+  </div>
+
+  <div class="q-card" id="q3">
+    <div class="q-text">3. After <code>fig, axes = plt.subplots(2, 2)</code>, how do you draw on the bottom-right plot?</div>
+    <label class="q-opt"><input type="radio" name="q3" value="a"> <span><code>axes[3]</code></span></label>
+    <label class="q-opt"><input type="radio" name="q3" value="b"> <span><code>plt.subplot(4)</code></span></label>
+    <label class="q-opt"><input type="radio" name="q3" value="c"> <span><code>axes[1, 1]</code></span></label>
+    <label class="q-opt"><input type="radio" name="q3" value="d"> <span><code>fig[1, 1]</code></span></label>
+    <div class="q-fb" id="f3"></div>
+  </div>
+
+  <div class="q-card" id="q4">
+    <div class="q-text">4. "What does the spread of Global_Sales look like across all titles?" — best first chart?</div>
+    <label class="q-opt"><input type="radio" name="q4" value="a"> <span>Scatter plot of NA_Sales vs EU_Sales</span></label>
+    <label class="q-opt"><input type="radio" name="q4" value="b"> <span>Histogram or box plot of Global_Sales</span></label>
+    <label class="q-opt"><input type="radio" name="q4" value="c"> <span>Grouped bar of sales by platform</span></label>
+    <label class="q-opt"><input type="radio" name="q4" value="d"> <span>A 2×2 dashboard</span></label>
+    <div class="q-fb" id="f4"></div>
+  </div>
+
+  <div class="q-card" id="q5">
+    <div class="q-text">5. You want to show how each platform's catalogue splits across genres AND compare the total size per platform. Which chart?</div>
+    <label class="q-opt"><input type="radio" name="q5" value="a"> <span>Scatter plot</span></label>
+    <label class="q-opt"><input type="radio" name="q5" value="b"> <span>Dodged bar only</span></label>
+    <label class="q-opt"><input type="radio" name="q5" value="c"> <span>Stacked bar</span></label>
+    <label class="q-opt"><input type="radio" name="q5" value="d"> <span>Histogram</span></label>
+    <div class="q-fb" id="f5"></div>
+  </div>
+
+  <div style="text-align:center;margin-top:20px">
+    <button class="btn btn-c" onclick="checkQ()">Check Answers</button>
+    <button class="btn btn-b" style="margin-left:10px" onclick="resetQ()">Reset</button>
+  </div>
+  <div id="q-score" style="text-align:center;margin-top:16px;font-size:16px;font-weight:800;display:none"></div>
+</div>
+
+<!-- ━━ SUMMARY ━━ -->
+<div class="section" id="s09">
+  <div class="sec-header">
+    <span class="sec-num">∑</span>
+    <div class="sec-title">Mission Complete — 4 Questions Answered</div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Board Question</th><th>Craft That Answers It</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Leading genre obvious at a glance</td><td>Sorted horizontal bar, one bar highlighted, title = finding</td></tr>
+      <tr><td>2</td><td>Top earner stand out</td><td>Avg sales per genre, top bar highlighted, finding in the title</td></tr>
+      <tr><td>3</td><td>Four headline facts on one page</td><td><code>plt.subplots(2,2)</code> + <code>suptitle</code> + <code>tight_layout</code></td></tr>
+      <tr><td>4</td><td>Right chart for any question</td><td>Selection framework: data shape × explore/explain</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout c-cyan" style="margin-top:16px">
+    <span class="callout-icon">🔜</span>
+    <div class="callout-body">
+      <b>Coming up in Data Visualization 2</b>
+      <p>The polished charts you built today become the panels of a multivariate story: three or more variables at once — box plots with hue, scatter with hue and size, joint and pair plots — then the insight ladder from four charts to a single board recommendation.</p>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  /* progress */
+  window.addEventListener('scroll', function(){
+    var el = document.getElementById('progressBar');
+    var t = document.documentElement.scrollTop, h = document.documentElement.scrollHeight - window.innerHeight;
+    el.style.width = (t/h*100)+'%';
+  });
+
+  /* ── API LOOKUP ── */
+  var apiSnips = {
+    title:  'ax.set_title("Action leads the catalogue", loc="left")\n# loc="left" aligns title to the left edge — pro default',
+    xlabel: 'ax.set_xlabel("Avg global sales (M units)")\nax.set_ylabel("")   # clear if redundant',
+    xlim:   'ax.set_xlim(0, 50)   # zoom x-axis to 0–50\nax.set_ylim(0, None)  # None = auto-scale on that end',
+    spines: 'ax.spines["top"].set_visible(False)\nax.spines["right"].set_visible(False)\n# Remove the box — standard for clean charts',
+    legend: 'ax.legend(loc="upper right", ncol=2, frameon=False, title="Genre")\n# Put legend OUTSIDE: ax.legend(loc=(1.02, 0.5))',
+    ticks:  'ax.set_xticks(range(1996, 2017, 4))       # custom positions\nax.tick_params(axis="x", rotation=45, labelsize=10)',
+    grid:   'ax.grid(True, axis="y", alpha=0.3)   # faint horizontal gridlines only\n# axis="x" for vertical; alpha controls transparency',
+  };
+  window.apiLook = function(k){
+    document.getElementById('api-out').textContent = apiSnips[k];
+  };
+
+  /* ── CRAFT SCORE ── */
+  window.craftScore = function(){
+    var n = ['cb1','cb2','cb3','cb4','cb5'].filter(function(id){ return document.getElementById(id).checked; }).length;
+    var msgs = ['Exploratory rough draft','Making progress — add styling','Getting better — almost board-ready','Good — just one more tweak','Nearly there!','✅  Board-ready! This chart goes in the deck.'];
+    var colours = ['var(--muted)','var(--muted)','var(--amber)','var(--amber)','var(--cyan)','var(--green)'];
+    var el = document.getElementById('craft-out');
+    el.textContent = n + ' / 5 — ' + msgs[n];
+    el.style.color = colours[n];
+  };
+
+  /* ── SUBPLOT INDEX ── */
+  window.subIdx = function(){
+    var r = parseInt(document.getElementById('sub-r').value);
+    var c = parseInt(document.getElementById('sub-c').value);
+    var lines = ['fig, axes = plt.subplots(' + r + ', ' + c + ', figsize=(13, 8))\n'];
+    for (var i=0;i<r;i++) for (var j=0;j<c;j++){
+      var idx = r===1 ? '['+j+']' : c===1 ? '['+i+']' : '['+i+', '+j+']';
+      var pos = (i===0?'top':'bottom')+'-'+(j===0?'left':'right');
+      lines.push('axes'+idx+'.set_title("'+ pos +'")\t# row '+i+', col '+j);
+    }
+    lines.push('\nfig.suptitle("Your headline", fontsize=15)\nfig.tight_layout()');
+    document.getElementById('sub-out').textContent = lines.join('\n');
+  };
+  subIdx();
+
+  /* ── CHART SELECTOR ── */
+  var csData = {
+    cat1:    { explore: 'sns.countplot(data=vg, x="Genre")\n# Quick — see the distribution', explain: 'fig, ax = plt.subplots()\nbars = ax.barh(genre.index[::-1], genre.values[::-1], color="#9aa7b8")\nbars[-1].set_color("#2E86AB")  # highlight\nax.set_title("Action leads the catalogue", loc="left")'},
+    num1:    { explore: 'sns.histplot(data=vg, x="Global_Sales", bins=30)\n# or sns.boxplot', explain: 'fig, ax = plt.subplots(figsize=(8,4))\nax.hist(vg["Global_Sales"], bins=30, color="#2E86AB", edgecolor="none")\nax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)\nax.set_title("Most titles sell under 1M — a few are hits", loc="left")'},
+    num2:    { explore: 'sns.scatterplot(data=vg, x="NA_Sales", y="EU_Sales")', explain: 'fig, ax = plt.subplots(figsize=(7,5))\nax.scatter(vg.NA_Sales, vg.EU_Sales, alpha=0.3, color="#9aa7b8", s=20)\n# highlight an outlier if there is one\nax.set_title("NA and EU sales are correlated", loc="left")'},
+    cat1num1:{ explore: 'sns.boxplot(data=vg, x="Genre", y="Global_Sales")\n# or sns.barplot', explain: 'fig, ax = plt.subplots(figsize=(9,4.5))\nsns.barplot(data=vg, y="Genre", x="Global_Sales", errorbar=None, ax=ax)\nax.set_title("Platform games earn most per title", loc="left")'},
+    cat2:    { explore: 'ct = pd.crosstab(vg["Platform"], vg["Genre"])\nct.plot(kind="bar", stacked=True)', explain: 'ct = pd.crosstab(vg["Platform"], vg["Genre"]).loc[top_plat, top_gen]\nax = ct.plot(kind="bar", stacked=True, figsize=(8, 4.5))\nax.set_title("Action dominates every major platform", loc="left")\nax.tick_params(axis="x", rotation=0)'},
+    time:    { explore: 'sns.lineplot(data=yr, x="Year", y="Name")', explain: 'fig, ax = plt.subplots(figsize=(9,4))\nax.plot(yr.Year, yr.Name, color="#2E86AB", linewidth=2)\nax.axvline(2008, color="#f59e0b", linestyle="--", alpha=.6, label="peak")\nax.set_title("Releases peaked in 2008 — now declining", loc="left")'},
+  };
+  window.chartSelect = function(){
+    var v = document.getElementById('cs-vars').value;
+    var j = document.getElementById('cs-job').value;
+    var snippet = csData[v][j];
+    document.getElementById('cs-out').textContent = snippet;
+  };
+  chartSelect();
+
+  /* ── QUIZ ── */
+  var ans = {q1:'b', q2:'c', q3:'c', q4:'b', q5:'c'};
+  var ok = {
+    q1:'✅ Correct! fig = the whole canvas (Figure), ax = one plot on it (Axes). Seaborn draws on ax via ax=ax.',
+    q2:'✅ Correct! ax.barh() returns the bar objects. bars[-1] is the top bar (highest value, last in sorted list). set_color recolours just that one.',
+    q3:'✅ Correct! For a 2×2 grid, axes is 2D: row 1, col 1 = bottom-right = axes[1,1]. axes[3] only works on a flattened array.',
+    q4:'✅ Correct! One continuous variable, exploring distribution → histogram or box plot. Scatter needs two variables; grouped bar needs a category.',
+    q5:'✅ Correct! Stacked bar shows the total AND what it\'s made of. Use dodged when comparing one segment across groups is the primary question.',
+  };
+  var wrong = {
+    q1:'fig is the whole Figure (canvas). ax is one Axes (plot) on it — not the other way round.',
+    q2:'ax.barh() returns the bar objects. bars[-1] is the top bar; .set_color() recolours just that one. set_title/set_xlim/grid do other things entirely.',
+    q3:'For a 2×2 grid, axes is a 2D array. Bottom-right = row 1, col 1 = axes[1,1]. axes[3] needs a flattened array; fig is not indexable.',
+    q4:'One continuous variable + exploring distribution → histogram or box plot. Scatter needs two continuous variables. Grouped bar needs a category.',
+    q5:'Stacked bar shows total + composition. Dodged is better when comparing segment sizes. Scatter/histogram are for different data types.',
+  };
+  window.checkQ = function(){
+    var score = 0;
+    for (var i=1;i<=5;i++){
+      var sel = document.querySelector('input[name="q'+i+'"]:checked');
+      var fb  = document.getElementById('f'+i);
+      document.querySelectorAll('#q'+i+' .q-opt').forEach(function(o){o.classList.remove('correct','wrong');});
+      if(!sel){fb.className='q-fb show err';fb.textContent='Pick an answer!';continue;}
+      var c = ans['q'+i];
+      document.querySelectorAll('input[name="q'+i+'"]').forEach(function(o){
+        if(o.value===c) o.closest('.q-opt').classList.add('correct');
+        else if(o===sel && o.value!==c) o.closest('.q-opt').classList.add('wrong');
+      });
+      if(sel.value===c){score++;fb.className='q-fb show ok';fb.textContent=ok['q'+i];}
+      else{fb.className='q-fb show err';fb.textContent='❌ '+wrong['q'+i];}
+    }
+    var sc = document.getElementById('q-score');
+    sc.style.display='block';
+    var pct = Math.round(score/5*100);
+    sc.style.color = pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--coral)';
+    sc.textContent = score+' / 5 ('+pct+'%) — '+(pct>=80?'🏆 Board-ready analyst!':pct>=60?'👍 Review Sections 02–03.':'📚 Review the architecture and styling sections.');
+  };
+  window.resetQ = function(){
+    for(var i=1;i<=5;i++){
+      document.querySelectorAll('input[name="q'+i+'"]').forEach(function(r){r.checked=false;});
+      var fb=document.getElementById('f'+i);fb.className='q-fb';
+      document.querySelectorAll('#q'+i+' .q-opt').forEach(function(o){o.classList.remove('correct','wrong');});
+    }
+    document.getElementById('q-score').style.display='none';
+  };
+})();
+</script>
+</body>
+</html>
